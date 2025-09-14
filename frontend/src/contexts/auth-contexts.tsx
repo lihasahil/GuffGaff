@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Fetch current user from backend
   const fetchUser = useCallback(async () => {
     try {
-      const response = await apiClient.get<User>("/auth/api/check", {
+      const response = await apiClient.get<User>("/auth/check", {
         withCredentials: true,
       });
       setUser(response.data);
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     async (email: string, password: string) => {
       try {
         await apiClient.post(
-          "/api/auth/login",
+          "/auth/login",
           { email, password },
           { withCredentials: true }
         );
@@ -67,14 +67,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Logout: clear cookie + reset state
   const logout = useCallback(async () => {
     try {
-      await apiClient.post("/api/auth/logout", {}, { withCredentials: true });
+      await apiClient.post("/auth/logout", {}, { withCredentials: true });
     } catch (err) {
       if (err instanceof AxiosError) {
         console.warn("Logout failed:", err.response?.data || err.message);
       }
     } finally {
       setUser(null);
-      window.location.href = "/login";
+      window.location.href = "/signin";
     }
   }, []);
 

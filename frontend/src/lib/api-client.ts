@@ -76,7 +76,7 @@ const createApiInstance = ({
           if (!isAuthRoute) {
             console.warn("Unauthorized outside auth route! Logging out...");
             try {
-              await apiClient.post("/api/auth/logout");
+              await apiClient.post("/auth/logout");
             } catch (logoutErr) {
               console.error("Logout request failed:", logoutErr);
             }

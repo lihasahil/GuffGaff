@@ -6,6 +6,8 @@ export const ROUTES = {
   },
   Main: {
     BASE: "/home",
+    PROFILE: "/profile",
+    SETTINGS: "/settings",
   },
   ERROR: {
     INTERNAL_SERVER_ERROR: "/500",
