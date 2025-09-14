@@ -6,6 +6,8 @@ import { ProtectedRoute } from "../../components/gaurds/protected-route";
 import AuthLayout from "../../features/auth";
 import LoginForm from "../../features/auth/components/login-form";
 import SignUpForm from "../../features/auth/components/signup-form";
+import Profile from "../../features/profile";
+import MainPageLayout from "../../components/layouts/main-page-layout";
 
 export const router = createBrowserRouter([
   {
@@ -30,10 +32,15 @@ export const router = createBrowserRouter([
       {
         Component: ProtectedRoute,
         children: [
-          //   {
-          //     path: ROUTES.HOME,
-          //     element: <RoleBasedRoutesSwitcher />,
-          //   },
+          {
+            Component: MainPageLayout,
+            children: [
+              {
+                path: ROUTES.Main.PROFILE,
+                element: <Profile />,
+              },
+            ],
+          },
         ],
       },
     ],
