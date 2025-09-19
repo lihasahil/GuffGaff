@@ -6,6 +6,8 @@ import { z } from "zod";
 import AuthImagePattern from "../../../components/reusable-components/auth-image-pattern";
 import { Link } from "react-router";
 import { Button } from "../../../components/ui/button";
+import { useAuth } from "../../../contexts/auth-contexts";
+import toast from "react-hot-toast";
 
 // Define Zod schema
 const loginSchema = z.object({
@@ -16,6 +18,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 function LoginForm() {
+  const { login, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -25,7 +28,7 @@ function LoginForm() {
     Partial<Record<keyof LoginFormData, string>>
   >({});
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const result = loginSchema.safeParse(formData);
@@ -39,6 +42,12 @@ function LoginForm() {
       });
       setErrors(newErrors);
       return;
+    }
+    try {
+      await login(result.data.email, result.data.password);
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to Sign up");
     }
 
     setErrors({});
@@ -122,7 +131,7 @@ function LoginForm() {
 
             {/* Submit Button */}
             <Button type="submit" className="btn btn-primary w-full">
-              Login
+              {isLoading? "Processing": "Sign In"}
             </Button>
           </form>
 

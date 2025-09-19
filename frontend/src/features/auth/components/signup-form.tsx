@@ -6,10 +6,12 @@ import { z } from "zod";
 import AuthImagePattern from "../../../components/reusable-components/auth-image-pattern";
 import { Link } from "react-router";
 import { Button } from "../../../components/ui/button";
+import { useAuth } from "../../../contexts/auth-contexts";
+import toast from "react-hot-toast";
 
 // Define Zod schema
 const signUpSchema = z.object({
-  fullName: z.string().min(2, "Full name must be at least 2 characters"),
+  fullName: z.string().min(10, "Full name must be at least 10 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
@@ -17,6 +19,7 @@ const signUpSchema = z.object({
 type SignUpFormData = z.infer<typeof signUpSchema>;
 
 function SignUpForm() {
+  const { signup, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState<SignUpFormData>({
     fullName: "",
@@ -27,13 +30,12 @@ function SignUpForm() {
     Partial<Record<keyof SignUpFormData, string>>
   >({});
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const result = signUpSchema.safeParse(formData);
 
     if (!result.success) {
-      // Collect field errors
       const newErrors: Partial<Record<keyof SignUpFormData, string>> = {};
       result.error.issues.forEach((err) => {
         const fieldName = err.path[0] as keyof SignUpFormData;
@@ -42,9 +44,17 @@ function SignUpForm() {
       setErrors(newErrors);
       return;
     }
-
-    // If validation passes
     setErrors({});
+    try {
+      await signup(
+        result.data.fullName,
+        result.data.email,
+        result.data.password
+      );
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to Sign up");
+    }
     console.log("Form submitted:", result.data);
   };
 
@@ -149,7 +159,7 @@ function SignUpForm() {
 
             {/* Submit Button */}
             <Button type="submit" className="btn btn-primary w-full">
-              Sign Up
+              {isLoading ? "Processing..." : "Sign Up"}
             </Button>
           </form>
           <div className="text-center">

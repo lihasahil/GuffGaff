@@ -18,6 +18,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signup: (fullName: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -45,9 +46,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     fetchUser();
   }, [fetchUser]);
 
+  const signup = useCallback(
+    async (fullName: string, email: string, password: string) => {
+      try {
+        setIsLoading(true);
+        await apiClient.post(
+          "/auth/signup",
+          { fullName, email, password },
+          { withCredentials: true }
+        );
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          console.error("Signup failed:", err.response?.data || err.message);
+        }
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
   const login = useCallback(
     async (email: string, password: string) => {
       try {
+        setIsLoading(true);
         await apiClient.post(
           "/auth/login",
           { email, password },
@@ -59,6 +82,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           console.error("Login failed:", err.response?.data || err.message);
         }
         throw err;
+      } finally {
+        setIsLoading(false);
       }
     },
     [fetchUser]
@@ -85,8 +110,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isLoading,
       login,
       logout,
+      signup,
     }),
-    [user, isLoading, login, logout]
+    [user, isLoading, signup, login, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
