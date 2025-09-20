@@ -104,7 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(null);
       navigate(ROUTES.AUTH.SIGNIN, { replace: true });
     }
-  }, []);
+  }, [navigate]);
 
   const value = useMemo(
     () => ({
