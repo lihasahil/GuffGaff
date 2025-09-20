@@ -12,6 +12,8 @@ import {
 } from "react";
 import { apiClient } from "../lib/api-client";
 import type { User } from "../types/auth-types";
+import { ROUTES } from "../configs/routes";
+import { useNavigate } from "react-router";
 
 type AuthContextType = {
   user: User | null;
@@ -27,6 +29,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Fetch current user from backend
   const fetchUser = useCallback(async () => {
@@ -99,7 +102,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } finally {
       setUser(null);
-      window.location.href = "/signin";
+      navigate(ROUTES.AUTH.SIGNIN, { replace: true });
     }
   }, []);
 

@@ -8,6 +8,7 @@ import LoginForm from "../../features/auth/components/login-form";
 import SignUpForm from "../../features/auth/components/signup-form";
 import Profile from "../../features/profile";
 import MainPageLayout from "../../components/layouts/main-page-layout";
+import Home from "../../features/home";
 
 export const router = createBrowserRouter([
   {
@@ -35,6 +36,7 @@ export const router = createBrowserRouter([
           {
             Component: MainPageLayout,
             children: [
+              { path: ROUTES.Main.BASE, element: <Home /> },
               {
                 path: ROUTES.Main.PROFILE,
                 element: <Profile />,
