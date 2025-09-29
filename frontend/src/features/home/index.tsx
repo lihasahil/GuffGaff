@@ -1,9 +1,23 @@
-import { Button } from "../../components/ui/button";
-import { useAuth } from "../../contexts/auth-contexts";
+import { useChat } from "../../contexts/chat-contexts";
+import ChatContainer from "./comopnents/chat-container";
+import NoChatSelected from "./comopnents/no-chat-selected";
+import Sidebar from "./comopnents/sidebar";
 
 function Home() {
-  const { logout } = useAuth();
-  return <Button onClick={logout}>Logout</Button>;
+  const { selectedUser } = useChat();
+  return (
+    <div className="h-screen bg-base-200">
+      <div className="flex items-center justify-center pt-20 px-4">
+        <div className="bg-base-100 rounded-lg shadow-cl w-full max-w-6xl h-[calc(100vh-8rem)]">
+          <div className="flex h-full rounded-lg overflow-hidden">
+            <Sidebar />
+
+            {!selectedUser ? <NoChatSelected /> : <ChatContainer />}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default Home;
