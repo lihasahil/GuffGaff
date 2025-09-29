@@ -22,6 +22,7 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<void>;
   signup: (fullName: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -106,6 +107,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [navigate]);
 
+  const updateProfile = async (data: Partial<User>) => {
+    setIsLoading(true);
+    try {
+      const res = await apiClient.put<User>("/auth/update-profile", data, {
+        withCredentials: true,
+      });
+
+      setUser(res.data);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error(
+          "Update profile failed:",
+          error.response?.data || error.message
+        );
+      }
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value = useMemo(
     () => ({
       user,
@@ -114,6 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       login,
       logout,
       signup,
+      updateProfile,
     }),
     [user, isLoading, signup, login, logout]
   );
