@@ -1,6 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import type { User } from "../types/auth-types";
 import type { Message } from "../types/message-types";
 import { apiClient } from "../lib/api-client";
@@ -24,38 +30,38 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  // Fetch sidebar users
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const res = await apiClient.get<User[]>("/messages/users");
       setUsers(res.data);
     } catch (err) {
       console.error("Failed to fetch users", err);
     }
-  };
+  }, []); // empty deps = stable function
 
-  // Fetch messages with selected user
-  const fetchMessages = async (userId: string) => {
+  const fetchMessages = useCallback(async (userId: string) => {
     try {
       const res = await apiClient.get<Message[]>(`/messages/${userId}`);
       setMessages(res.data);
     } catch (err) {
       console.error("Failed to fetch messages", err);
     }
-  };
+  }, []);
 
-  // Send message
-  const sendMessage = async (userId: string, text?: string, image?: string) => {
-    try {
-      const res = await apiClient.post<Message>(`/messages/send/${userId}`, {
-        text,
-        image,
-      });
-      setMessages((prev) => [...prev, res.data]); // append new message
-    } catch (err) {
-      console.error("Failed to send message", err);
-    }
-  };
+  const sendMessage = useCallback(
+    async (userId: string, text?: string, image?: string) => {
+      try {
+        const res = await apiClient.post<Message>(`/messages/send/${userId}`, {
+          text,
+          image,
+        });
+        setMessages((prev) => [...prev, res.data]);
+      } catch (err) {
+        console.error("Failed to send message", err);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     fetchUsers();
