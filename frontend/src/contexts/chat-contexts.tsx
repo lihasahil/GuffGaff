@@ -65,7 +65,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   return (
     <ChatContext.Provider
