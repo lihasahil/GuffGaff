@@ -19,6 +19,7 @@ interface ChatContextType {
   sendMessage: (userId: string, text?: string, image?: string) => Promise<void>;
   selectedUser: User | null;
   setSelectedUser: React.Dispatch<React.SetStateAction<User | null>>;
+  isLoading: boolean;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -29,20 +30,25 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   const [users, setUsers] = useState<User[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     try {
+      setIsLoading(true);
       const res = await apiClient.get<User[]>("/messages/users");
       setUsers(res.data);
+      setIsLoading(false);
     } catch (err) {
       console.error("Failed to fetch users", err);
     }
   }, []); // empty deps = stable function
 
   const fetchMessages = useCallback(async (userId: string) => {
+    setIsLoading(true);
     try {
       const res = await apiClient.get<Message[]>(`/messages/${userId}`);
       setMessages(res.data);
+      setIsLoading(false);
     } catch (err) {
       console.error("Failed to fetch messages", err);
     }
@@ -77,6 +83,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         sendMessage,
         selectedUser,
         setSelectedUser,
+        isLoading,
       }}
     >
       {children}
