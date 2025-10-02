@@ -30,7 +30,7 @@ function ChatHeader() {
           </div>
         </div>
         {/* Close Button */}
-        <Button onClick={() => setSelectedUser(null)}>
+        <Button variant='outline' onClick={() => setSelectedUser(null)}>
           <X />
         </Button>
       </div>

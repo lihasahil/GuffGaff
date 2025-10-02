@@ -20,22 +20,21 @@ function Sidebar() {
           <span className="font-medium hidden lg:block">Contacts</span>
         </div>
       </div>
-      <div className="overflow-y-auto w-full py-3">
+      <div className="overflow-y-auto w-full p-3">
         {users.map((user) => (
           <Button
+            variant="outline"
             key={user._id}
             onClick={() => setSelectedUser(user)}
             className={`w-full px-3 flex items-center gap-3 mb-2 py-6 hover:bg-base-300 transition-colors ${
-              selectedUser?._id === user._id
-                ? "bg-base-300 ring-1 ring-base-300"
-                : ""
+              selectedUser?._id === user._id ? " ring-1 ring-green-500" : ""
             }`}
           >
             <div className="relative mx-auto lg:mx-0">
               <img
                 src={user.profilePic || "/avatar.png"}
                 alt={user.fullName}
-                className="size-12 object-cover rounded-full"
+                className="size-12 object-contain sm:object-cover rounded-full"
               />
               {onlineUsers.includes(user._id) && (
                 <span className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full ring-2 ring-zinc-900"></span>

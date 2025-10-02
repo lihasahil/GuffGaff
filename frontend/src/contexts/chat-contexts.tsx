@@ -16,7 +16,11 @@ interface ChatContextType {
   messages: Message[];
   fetchUsers: () => Promise<void>;
   fetchMessages: (userId: string) => Promise<void>;
-  sendMessage: (userId: string, text?: string, image?: string) => Promise<void>;
+  sendMessage: (
+    userId: string,
+    text?: string,
+    image?: string | null
+  ) => Promise<void>;
   selectedUser: User | null;
   setSelectedUser: React.Dispatch<React.SetStateAction<User | null>>;
   isLoading: boolean;
@@ -55,7 +59,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const sendMessage = useCallback(
-    async (userId: string, text?: string, image?: string) => {
+    async (userId: string, text?: string, image?: string | null) => {
       try {
         const res = await apiClient.post<Message>(`/messages/send/${userId}`, {
           text,

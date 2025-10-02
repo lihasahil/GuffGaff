@@ -1,12 +1,12 @@
 import { Link } from "react-router";
 import { useAuth } from "../contexts/auth-contexts";
-import { LogOut, MessageSquare, Settings, User } from "lucide-react";
+import { LogOut, MessageSquare, User } from "lucide-react";
 import { Button } from "./ui/button";
 
 function Navbar() {
   const { logout, user } = useAuth();
   return (
-    <header className="bg-base-100 border-b border-base-300 fixed w-full top-0 z-40 backdrop-blur-lg bg-base-100/80">
+    <header className="bg-base-100 border-b border-base-300 fixed p-4 w-full top-0 z-40 backdrop-blur-lg bg-base-100/80">
       <div className="flex items-center justify-between h-full">
         <div className="flex items-center gap-8">
           <Link
@@ -20,18 +20,14 @@ function Navbar() {
           </Link>
         </div>
         <div className="flex items-center gap-2">
-          <Link to={"/settings"} className="btn btn-sm gap-2 transition colors">
-            <Settings className="size-4" />
-            <span className="hidden sm:inline">Settings</span>
-          </Link>
           {user && (
             <>
-              <Link to={"/profile"} className="btn btn-sm gap-2">
+              <Link to={"/profile"} className="flex items-center gap-2">
                 <User className="size-5" />
-                <span className="hidden sm:inline">Profile</span>
+                <span className="hidden sm:inline hover:underline">Profile</span>
               </Link>
 
-              <Button onClick={logout}>
+              <Button variant='outline' onClick={logout}>
                 <LogOut className="size-5" />
                 <span className="hidden sm:inline">LogOut</span>
               </Button>
