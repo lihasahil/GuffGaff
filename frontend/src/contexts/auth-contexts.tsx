@@ -1,5 +1,4 @@
 /* eslint-disable react-refresh/only-export-components */
-
 import { AxiosError } from "axios";
 import {
   createContext,
@@ -14,6 +13,7 @@ import { apiClient } from "../lib/api-client";
 import type { User } from "../types/auth-types";
 import { ROUTES } from "../configs/routes";
 import { useNavigate } from "react-router";
+import { socket } from "../lib/socket";
 
 type AuthContextType = {
   user: User | null;
@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Fetch current user from backend
+  // Fetch authenticated user
   const fetchUser = useCallback(async () => {
     try {
       const response = await apiClient.get<User>("/auth/check", {
@@ -46,10 +46,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  // Run on initial load
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
 
+  useEffect(() => {
+    if (user) {
+      if (!socket.connected) {
+        socket.connect();
+        console.log("🔌 Socket connected:", socket.id);
+      }
+
+      socket.on("connect", () => {
+        console.log("Socket reconnected:", socket.id);
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Socket disconnected");
+      });
+    } else {
+      if (socket.connected) {
+        socket.disconnect();
+        console.log("🚪 Socket disconnected (no user)");
+      }
+    }
+    return () => {
+      socket.off("connect");
+      socket.off("disconnect");
+    };
+  }, [user]);
+
+  // Signup
   const signup = useCallback(
     async (fullName: string, email: string, password: string) => {
       try {
@@ -71,6 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     []
   );
 
+  // Login 
   const login = useCallback(
     async (email: string, password: string) => {
       try {
@@ -80,7 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           { email, password },
           { withCredentials: true }
         );
-        await fetchUser();
+        await fetchUser(); // this triggers socket connect via effect
       } catch (err) {
         if (err instanceof AxiosError) {
           console.error("Login failed:", err.response?.data || err.message);
@@ -93,6 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [fetchUser]
   );
 
+  // Logout
   const logout = useCallback(async () => {
     try {
       await apiClient.post("/auth/logout", {}, { withCredentials: true });
@@ -112,7 +142,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const res = await apiClient.put<User>("/auth/update-profile", data, {
         withCredentials: true,
       });
-
       setUser(res.data);
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -143,9 +172,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-/**
- * Custom hook to consume AuthContext
- */
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
