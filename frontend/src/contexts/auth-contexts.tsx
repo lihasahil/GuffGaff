@@ -8,31 +8,37 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from "react";
 import { apiClient } from "../lib/api-client";
 import type { User } from "../types/auth-types";
 import { ROUTES } from "../configs/routes";
 import { useNavigate } from "react-router";
-import { socket } from "../lib/socket";
+import { io, type Socket } from "socket.io-client";
 
 type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  onlineUsers: string[]; // 👈 NEW
   login: (email: string, password: string) => Promise<void>;
   signup: (fullName: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  socket: Socket | null;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const SOCKET_URL = "http://localhost:5001";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const navigate = useNavigate();
+  const socketRef = useRef<Socket | null>(null);
 
-  // Fetch authenticated user
+  // Fetch current user
   const fetchUser = useCallback(async () => {
     try {
       const response = await apiClient.get<User>("/auth/check", {
@@ -46,34 +52,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Run on initial load
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
 
+  // Manage socket connection based on user auth state
   useEffect(() => {
-    if (user) {
-      if (!socket.connected) {
-        socket.connect();
-        console.log("🔌 Socket connected:", socket.id);
-      }
+    if (user && !socketRef.current) {
+      const socket = io(SOCKET_URL, {
+        withCredentials: true,
+        autoConnect: false,
+        auth: { userId: user._id },
+      });
+
+      socket.connect();
 
       socket.on("connect", () => {
-        console.log("Socket reconnected:", socket.id);
+        console.log("🔌 Socket connected:", socket.id);
       });
 
       socket.on("disconnect", () => {
         console.log("Socket disconnected");
       });
-    } else {
-      if (socket.connected) {
-        socket.disconnect();
-        console.log("🚪 Socket disconnected (no user)");
-      }
+
+      socket.on("getOnlineUsers", (users: string[]) => {
+        console.log(" Online users:", users);
+        setOnlineUsers(users);
+      });
+
+      socketRef.current = socket;
     }
+
+    // Disconnect when user logs out
+    if (!user && socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
+      setOnlineUsers([]);
+    }
+
+    // Cleanup
     return () => {
-      socket.off("connect");
-      socket.off("disconnect");
+      if (socketRef.current) {
+        socketRef.current.off("connect");
+        socketRef.current.off("disconnect");
+        socketRef.current.off("getOnlineUsers");
+      }
     };
   }, [user]);
 
@@ -87,6 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           { fullName, email, password },
           { withCredentials: true }
         );
+        await fetchUser();
       } catch (err) {
         if (err instanceof AxiosError) {
           console.error("Signup failed:", err.response?.data || err.message);
@@ -96,10 +120,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
       }
     },
-    []
+    [fetchUser]
   );
 
-  // Login 
+  // Login → fetch user (socket connects via effect)
   const login = useCallback(
     async (email: string, password: string) => {
       try {
@@ -109,7 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           { email, password },
           { withCredentials: true }
         );
-        await fetchUser(); // this triggers socket connect via effect
+        await fetchUser();
       } catch (err) {
         if (err instanceof AxiosError) {
           console.error("Login failed:", err.response?.data || err.message);
@@ -122,7 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [fetchUser]
   );
 
-  // Logout
+  // Logout → disconnect socket automatically via effect
   const logout = useCallback(async () => {
     try {
       await apiClient.post("/auth/logout", {}, { withCredentials: true });
@@ -161,17 +185,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user,
       isAuthenticated: !!user,
       isLoading,
+      onlineUsers,
       login,
       logout,
       signup,
       updateProfile,
+      socket: socketRef.current,
     }),
-    [user, isLoading, signup, login, logout]
+    [user, isLoading, onlineUsers, signup, login, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+// Custom hook to consume AuthContext
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
