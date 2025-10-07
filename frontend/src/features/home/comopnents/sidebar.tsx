@@ -42,7 +42,7 @@ function Sidebar() {
                 <img
                   src={u.profilePic || "/avatar.png"}
                   alt={u.fullName}
-                  className="size-12 object-contain sm:object-cover rounded-full"
+                  className="size-12 object-contain rounded-full"
                 />
 
                 {/* Online dot */}
