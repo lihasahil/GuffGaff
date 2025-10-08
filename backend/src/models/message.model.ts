@@ -5,6 +5,7 @@ export interface IMessage extends Document {
   receiverId: mongoose.Types.ObjectId;
   text?: string;
   image?: string;
+  voice?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,6 +26,9 @@ const messageSchema = new Schema<IMessage>(
       type: String,
     },
     image: {
+      type: String,
+    },
+    voice: {
       type: String,
     },
   },

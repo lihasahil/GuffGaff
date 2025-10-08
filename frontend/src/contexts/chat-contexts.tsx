@@ -19,7 +19,8 @@ interface ChatContextType {
   sendMessage: (
     userId: string,
     text?: string,
-    image?: string | null
+    image?: string | null,
+    voice?: string | null
   ) => Promise<void>;
   selectedUser: User | null;
   setSelectedUser: React.Dispatch<React.SetStateAction<User | null>>;
@@ -36,35 +37,52 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Fetch all users
   const fetchUsers = useCallback(async () => {
     try {
       setIsLoading(true);
       const res = await apiClient.get<User[]>("/messages/users");
       setUsers(res.data);
-      setIsLoading(false);
     } catch (err) {
       console.error("Failed to fetch users", err);
-    }
-  }, []); // empty deps = stable function
-
-  const fetchMessages = useCallback(async (userId: string) => {
-    setIsLoading(true);
-    try {
-      const res = await apiClient.get<Message[]>(`/messages/${userId}`);
-      setMessages(res.data);
+    } finally {
       setIsLoading(false);
-    } catch (err) {
-      console.error("Failed to fetch messages", err);
     }
   }, []);
 
+  // Fetch all messages for a selected user
+  const fetchMessages = useCallback(async (userId: string) => {
+    try {
+      setIsLoading(true);
+      const res = await apiClient.get<Message[]>(`/messages/${userId}`);
+      setMessages(res.data);
+    } catch (err) {
+      console.error("Failed to fetch messages", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Send message (text, image URL/base64, or voice URL/base64)
   const sendMessage = useCallback(
-    async (userId: string, text?: string, image?: string | null) => {
+    async (
+      userId: string,
+      text?: string,
+      image?: string | null,
+      voice?: string | null
+    ) => {
       try {
-        const res = await apiClient.post<Message>(`/messages/send/${userId}`, {
-          text,
-          image,
-        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const payload: any = {};
+        if (text) payload.text = text;
+        if (image) payload.image = image;
+        if (voice) payload.voice = voice;
+
+        const res = await apiClient.post<Message>(
+          `/messages/send/${userId}`,
+          payload
+        );
+
         setMessages((prev) => [...prev, res.data]);
       } catch (err) {
         console.error("Failed to send message", err);

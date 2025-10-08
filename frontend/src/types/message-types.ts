@@ -4,5 +4,6 @@ export interface Message {
   receiverId: string;
   text?: string;
   image?: string;
+  voice?: Blob;
   createdAt: string;
 }

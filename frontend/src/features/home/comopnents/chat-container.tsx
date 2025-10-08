@@ -73,7 +73,7 @@ const ChatContainer = () => {
                 </span>
               </div>
 
-              {/*Messages for this date */}
+              {/* Messages for this date */}
               <div className="space-y-4">
                 {groupedMessages[dateKey].map((msg: any) => {
                   const isSender = msg.senderId === currentUser?._id;
@@ -116,6 +116,31 @@ const ChatContainer = () => {
                               isSender ? "self-end" : "self-start"
                             }`}
                           />
+                        )}
+
+                        {/* 🎙️ Voice message bubble */}
+                        {/* Voice message bubble */}
+                        {msg.voice && (
+                          <div
+                            className={`mt-2 flex items-center gap-3 px-3 py-2 rounded-lg ${
+                              isSender
+                                ? "bg-emerald-500 text-white self-end"
+                                : "bg-zinc-200 text-zinc-800"
+                            }`}
+                          >
+                            <audio
+                              controls
+                              src={msg.voice}
+                              className="w-40 h-8 accent-emerald-600 dark:accent-emerald-400"
+                              onLoadedMetadata={(e) => {
+                                const audio = e.currentTarget;
+                                audio.setAttribute(
+                                  "data-duration",
+                                  audio.duration.toFixed(0)
+                                );
+                              }}
+                            />
+                          </div>
                         )}
 
                         {/* Timestamp */}
