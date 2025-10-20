@@ -7,8 +7,9 @@ import MessageSkeleton from "./skeletons/message-skeleton";
 import { useAuth } from "../../../contexts/auth-contexts";
 
 const ChatContainer = () => {
-  const { user: currentUser } = useAuth(); // logged-in user
+  const { user: currentUser } = useAuth();
   const { messages, isLoading, fetchMessages, selectedUser } = useChat();
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // Fetch messages whenever a user is selected
@@ -119,7 +120,6 @@ const ChatContainer = () => {
                         )}
 
                         {/* 🎙️ Voice message bubble */}
-                        {/* Voice message bubble */}
                         {msg.voice && (
                           <div
                             className={`mt-2 flex items-center gap-3 px-3 py-2 rounded-lg ${
@@ -132,13 +132,6 @@ const ChatContainer = () => {
                               controls
                               src={msg.voice}
                               className="w-40 h-8 accent-emerald-600 dark:accent-emerald-400"
-                              onLoadedMetadata={(e) => {
-                                const audio = e.currentTarget;
-                                audio.setAttribute(
-                                  "data-duration",
-                                  audio.duration.toFixed(0)
-                                );
-                              }}
                             />
                           </div>
                         )}

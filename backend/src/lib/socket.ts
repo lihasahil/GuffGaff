@@ -12,11 +12,15 @@ const io = new Server(server, {
   },
 });
 
+export function getReceiverSocketId(userId: string): string | undefined {
+  return userSocketMap[userId];
+}
+
 // Store online users: userId -> socketId
 const userSocketMap: Record<string, string> = {};
 
 io.on("connection", (socket: Socket) => {
-  // Get userId from auth (frontend should pass { auth: { userId } })
+  // Get userId from auth
   const userId = socket.handshake.auth.userId as string | undefined;
 
   if (!userId) {

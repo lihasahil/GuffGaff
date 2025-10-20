@@ -1,5 +1,4 @@
 /* eslint-disable react-refresh/only-export-components */
-
 import React, {
   createContext,
   useContext,
@@ -10,6 +9,7 @@ import React, {
 import type { User } from "../types/auth-types";
 import type { Message } from "../types/message-types";
 import { apiClient } from "../lib/api-client";
+import { useAuth } from "./auth-contexts";
 
 interface ChatContextType {
   users: User[];
@@ -32,6 +32,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { socket } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -63,7 +64,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  // Send message (text, image URL/base64, or voice URL/base64)
+  // Send message (text, image, voice)
   const sendMessage = useCallback(
     async (
       userId: string,
@@ -72,8 +73,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       voice?: string | null
     ) => {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload: any = {};
+        const payload: Record<string, unknown> = {};
         if (text) payload.text = text;
         if (image) payload.image = image;
         if (voice) payload.voice = voice;
@@ -83,14 +83,41 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
           payload
         );
 
+        // Update local state
         setMessages((prev) => [...prev, res.data]);
+
+        // Emit real-time event via socket from AuthContext
+        socket?.emit("sendMessage", res.data);
       } catch (err) {
         console.error("Failed to send message", err);
       }
     },
-    []
+    [socket]
   );
 
+  //  Listen for real-time incoming messages
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleReceiveMessage = (message: Message) => {
+      // Only append messages relevant to the current chat
+      if (
+        selectedUser &&
+        (message.senderId === selectedUser._id ||
+          message.receiverId === selectedUser._id)
+      ) {
+        setMessages((prev) => [...prev, message]);
+      }
+    };
+
+    socket.on("newMessage", handleReceiveMessage);
+
+    return () => {
+      socket.off("newMessage", handleReceiveMessage);
+    };
+  }, [socket, selectedUser]);
+
+  // Initial fetch
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
