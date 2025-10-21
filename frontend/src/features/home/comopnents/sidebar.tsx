@@ -1,17 +1,24 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useChat } from "../../../contexts/chat-contexts";
 
 import { Users } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { useAuth } from "../../../contexts/auth-contexts";
+import { Label } from "../../../components/ui/label";
+import { Input } from "../../../components/ui/input";
 
 function Sidebar() {
   const { fetchUsers, users, selectedUser, setSelectedUser } = useChat();
   const { onlineUsers, user: currentUser } = useAuth();
+  const [showOnline, setShowOnline] = useState(false);
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  const filteredUsers = showOnline
+    ? users.filter((user) => onlineUsers.includes(user._id))
+    : users;
 
   return (
     <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
@@ -21,11 +28,26 @@ function Sidebar() {
           <Users className="size-6" />
           <span className="font-medium hidden lg:block">Contacts</span>
         </div>
+
+        <div className="mt-3 hidden lg:flex items-center gap-2">
+          <Label className="cursor-pointer flex items-center gap-2">
+            <Input
+              type="checkbox"
+              checked={showOnline}
+              onChange={(e) => setShowOnline(e.target.checked)}
+              className="size-4"
+            />
+            <span className="text-sm">Show online Only</span>
+          </Label>
+          <span className="text-xs text-zinc-500">
+            ({onlineUsers.length - 1} online)
+          </span>
+        </div>
       </div>
 
       {/* User list */}
       <div className="overflow-y-auto w-full p-3">
-        {users.map((u) => {
+        {filteredUsers.map((u) => {
           const isOnline = onlineUsers.includes(u._id);
           const isSelf = u._id === currentUser?._id;
 
