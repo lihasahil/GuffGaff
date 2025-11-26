@@ -1,11 +1,11 @@
 import mongoose, { Document, Schema } from "mongoose";
-
 export interface IMessage extends Document {
   senderId: mongoose.Types.ObjectId;
   receiverId: mongoose.Types.ObjectId;
   text?: string;
   image?: string;
   voice?: string;
+  deletedFor: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,6 +31,12 @@ const messageSchema = new Schema<IMessage>(
     voice: {
       type: String,
     },
+    deletedFor: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );

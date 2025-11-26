@@ -33,6 +33,7 @@ export const getMessages = async (req: Request, res: Response) => {
         { senderId: myId, receiverId: userToChatId },
         { senderId: userToChatId, receiverId: myId },
       ],
+      deletedFor: { $ne: myId },
     });
 
     res.status(200).json(messages);
@@ -73,13 +74,41 @@ export const sendMessage = async (req: Request, res: Response) => {
 
     const receiverSocketId = getReceiverSocketId(receiverId);
 
-    if(receiverSocketId){
-      io.to(receiverSocketId).emit("newMessage",newMessage)
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", newMessage);
     }
 
     res.status(201).json(newMessage);
   } catch (error) {
     console.log("Error in sendMessage", error);
+    res.status(500).json({ error: "Internal server Error" });
+  }
+};
+
+export const deleteConversation = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?._id;
+    const { id: otherUserId } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    await Message.updateMany(
+      {
+        $or: [
+          { senderId: userId, receiverId: otherUserId },
+          { senderId: otherUserId, receiverId: userId },
+        ],
+      },
+      {
+        $addToSet: { deletedFor: userId },
+      }
+    );
+
+    res.status(200).json({ message: "Conversation deleted for you" });
+  } catch (error) {
+    console.log("Error in deleteConversation", error);
     res.status(500).json({ error: "Internal server Error" });
   }
 };
