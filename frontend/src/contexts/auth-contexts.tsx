@@ -146,7 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [fetchUser]
   );
 
-  // Logout → disconnect socket automatically via effect
+  // Logout - disconnect socket automatically via effect
   const logout = useCallback(async () => {
     try {
       await apiClient.post("/auth/logout", {}, { withCredentials: true });

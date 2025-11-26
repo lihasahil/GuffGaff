@@ -5,6 +5,7 @@ import ChatHeader from "./chat-header";
 import MessageInput from "./message-input";
 import MessageSkeleton from "./skeletons/message-skeleton";
 import { useAuth } from "../../../contexts/auth-contexts";
+import sendSvg from "../../../assets/send.svg";
 
 const ChatContainer = () => {
   const { user: currentUser } = useAuth();
@@ -67,7 +68,7 @@ const ChatContainer = () => {
         {messages.length > 0 ? (
           Object.keys(groupedMessages).map((dateKey) => (
             <Fragment key={dateKey}>
-              {/* 🔹 Date divider */}
+              {/* Date divider */}
               <div className="flex justify-center">
                 <span className="text-xs text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-full">
                   {formatDate(dateKey)}
@@ -100,7 +101,7 @@ const ChatContainer = () => {
                           <div
                             className={`px-3 py-2 rounded-lg text-sm ${
                               isSender
-                                ? "bg-emerald-500 text-white self-end"
+                                ? "bg-primary-green text-white self-end"
                                 : "bg-zinc-200 text-zinc-800"
                             }`}
                           >
@@ -124,7 +125,7 @@ const ChatContainer = () => {
                           <div
                             className={`mt-2 flex items-center gap-3 px-3 py-2 rounded-lg ${
                               isSender
-                                ? "bg-emerald-500 text-white self-end"
+                                ? "bg-primary-green text-white self-end"
                                 : "bg-zinc-200 text-zinc-800"
                             }`}
                           >
@@ -160,9 +161,14 @@ const ChatContainer = () => {
             </Fragment>
           ))
         ) : (
-          <p className="text-center text-sm text-zinc-500">
+          <div className="flex items-center flex-col mt-30 text-center text-sm text-zinc-500">
+            <img
+              src={sendSvg}
+              alt=""
+              className="mx-auto mb-6 transition h-40 duration-700 hover:scale-105"
+            />
             No messages yet. Start the conversation!
-          </p>
+          </div>
         )}
 
         {/* Scroll anchor */}

@@ -1,7 +1,10 @@
-import { Camera, Mail, User } from "lucide-react";
+import { Camera, Mail, MoveLeft, User } from "lucide-react";
 import { useAuth } from "../../contexts/auth-contexts";
 import { Input } from "../../components/ui/input";
 import { useState } from "react";
+import profileSVG from "../../assets/profile.svg";
+import { Button } from "../../components/ui/button";
+import { useNavigate } from "react-router";
 
 function ProfilePage() {
   const { user, updateProfile, isLoading } = useAuth();
@@ -18,20 +21,27 @@ function ProfilePage() {
     reader.readAsDataURL(file);
 
     reader.onload = async () => {
-      const base64Image = reader.result as string; // FileReader gives string | ArrayBuffer
+      const base64Image = reader.result as string;
       setSelectedImg(base64Image);
       await updateProfile({ profilePic: base64Image });
     };
   };
+  const navigate = useNavigate();
 
   return (
-    <div className="h-screen pt-20">
-      <div className="max-w-2xl mx-auto p-4 py-8">
-        <div className="bg-base-300 rounded-xl p-6 space-y-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-semibold">Profile</h1>
-            <p className="nt-2">Your profile details</p>
+    <div className="min-h-screen mt-10 grid lg:grid-cols-2">
+      <div className="max-w-3xl p-4 py-8">
+        <div className="bg-base-300 rounded-xl p-6 space-y-4">
+          <div className="flex items-center lg:gap-50 flex-col sm:flex-row">
+            <Button
+              className="bg-primary-green hover:bg-primary-green/80 cursor-pointer"
+              onClick={() => navigate(-1)}
+            >
+              <MoveLeft />
+              Back
+            </Button>
           </div>
+
           {/* avatar upload section */}
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
@@ -84,7 +94,7 @@ function ProfilePage() {
             </div>
           </div>
 
-          <div className="mt-6 bg-base-300 rounded-xl p-6">
+          <div className="mt-2 bg-base-300 rounded-xl p-6">
             <h2 className="text-lg font-medium mb-4">Account Information</h2>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between py-2 border-b border-zinc-700">
@@ -93,10 +103,24 @@ function ProfilePage() {
               </div>
               <div className="flex items-center justify-between py-2">
                 <span>Account Status</span>
-                <span className="text-green-500">Active</span>
+                <span className="text-primary-green">Active</span>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      <div className="bg-muted hidden items-center justify-center p-8 lg:flex lg:w-full">
+        <div className="text-foreground/80 max-w-2xl text-center">
+          <img
+            src={profileSVG}
+            alt=""
+            className="mx-auto mb-6 transition h-70 duration-700 hover:scale-105"
+          />
+          <h2 className="text-4xl font-semibold">Profile Details</h2>
+          <p className="text-foreground/60 mt-4">
+            Manage your personal info and update your profile photo from this
+            page
+          </p>
         </div>
       </div>
     </div>

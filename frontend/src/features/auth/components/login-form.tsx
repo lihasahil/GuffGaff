@@ -3,7 +3,7 @@ import { MessageSquare, Mail, Lock, EyeOff, Eye } from "lucide-react";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { z } from "zod";
-import AuthImagePattern from "../../../components/reusable-components/auth-image-pattern";
+import authSvg from "../assets/auth.svg";
 import { Link } from "react-router";
 import { Button } from "../../../components/ui/button";
 import { useAuth } from "../../../contexts/auth-contexts";
@@ -34,7 +34,6 @@ function LoginForm() {
     const result = loginSchema.safeParse(formData);
 
     if (!result.success) {
-      // Collect field errors
       const newErrors: Partial<Record<keyof LoginFormData, string>> = {};
       result.error.issues.forEach((err) => {
         const fieldName = err.path[0] as keyof LoginFormData;
@@ -75,7 +74,7 @@ function LoginForm() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
-            <div>
+            <div className="space-y-2">
               <Label>
                 <span className="label-text font-medium">Email</span>
               </Label>
@@ -99,7 +98,7 @@ function LoginForm() {
             </div>
 
             {/* Password */}
-            <div>
+            <div className="space-y-2">
               <Label>
                 <span className="label-text font-medium">Password</span>
               </Label>
@@ -130,8 +129,11 @@ function LoginForm() {
             </div>
 
             {/* Submit Button */}
-            <Button type="submit" className="btn btn-primary w-full">
-              {isLoading? "Processing": "Sign In"}
+            <Button
+              type="submit"
+              className="btn bg-primary-green w-full py-4 cursor-pointer hover:bg-primary-green/80"
+            >
+              {isLoading ? "Processing" : "Sign In"}
             </Button>
           </form>
 
@@ -145,10 +147,19 @@ function LoginForm() {
           </div>
         </div>
       </div>
-      <AuthImagePattern
-        title="Welcome Back"
-        subtitle="Reconnect with your community and continue your journey"
-      />
+      <div className="bg-muted hidden items-center justify-center p-8 lg:flex lg:w-full">
+        <div className="text-foreground/80 max-w-2xl text-center">
+          <img
+            src={authSvg}
+            alt=""
+            className="mx-auto mb-6 transition duration-700 hover:scale-105"
+          />
+          <h2 className="text-4xl font-semibold">Welcome Back</h2>
+          <p className="text-foreground/60 mt-4">
+            Reconnect with your community and continue your journey
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

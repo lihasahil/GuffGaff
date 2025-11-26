@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { ImageIcon, Mic, Square, Send, X } from "lucide-react";
 
 import {
@@ -57,8 +57,9 @@ const MessageInput = () => {
       const base64String = await fileToBase64(file);
       setSelectedImage(base64String);
       setImagePreview(URL.createObjectURL(file));
-    } catch (error) {
-      toast.error("Failed to load image");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error("Failed to load image", error.message);
     }
   };
 

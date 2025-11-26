@@ -56,8 +56,8 @@ function Sidebar() {
               variant="outline"
               key={u._id}
               onClick={() => setSelectedUser(u)}
-              className={`w-full px-3 flex items-center gap-3 mb-2 py-6 hover:bg-base-300 transition-colors ${
-                selectedUser?._id === u._id ? "ring ring-green-500" : ""
+              className={`w-full px-3 flex items-center gap-3 mb-2 cursor-pointer py-6 hover:bg-base-300 transition-colors ${
+                selectedUser?._id === u._id ? "ring ring-primary-green" : ""
               }`}
             >
               <div className="relative mx-auto lg:mx-0">
@@ -69,7 +69,7 @@ function Sidebar() {
 
                 {/* Online dot */}
                 {isOnline && (
-                  <span className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full"></span>
+                  <span className="absolute bottom-0 right-0 size-3 bg-primary-green rounded-full"></span>
                 )}
               </div>
 
@@ -80,7 +80,7 @@ function Sidebar() {
                 </div>
                 <div
                   className={`text-sm ${
-                    isOnline ? "text-green-500" : "text-zinc-400"
+                    isOnline ? "text-primary-green" : "text-zinc-400"
                   }`}
                 >
                   {isOnline ? "Online" : "Offline"}

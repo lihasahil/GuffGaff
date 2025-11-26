@@ -9,7 +9,7 @@ function ChatHeader() {
 
   if (!selectedUser) return null;
 
-  const isOnline = onlineUsers.includes(selectedUser._id); // 👈 check online status
+  const isOnline = onlineUsers.includes(selectedUser._id);
 
   return (
     <div className="p-2.5 border-b border-base-300">
@@ -24,7 +24,7 @@ function ChatHeader() {
               className="size-10 rounded-full object-cover"
             />
             {isOnline && (
-              <span className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full" />
+              <span className="absolute bottom-0 right-0 size-3 bg-primary-green rounded-full" />
             )}
           </div>
 
@@ -33,7 +33,7 @@ function ChatHeader() {
             <h3 className="font-medium">{selectedUser.fullName}</h3>
             <p
               className={`text-sm ${
-                isOnline ? "text-green-500" : "text-zinc-400"
+                isOnline ? "text-primary-green" : "text-zinc-400"
               }`}
             >
               {isOnline ? "Online" : "Offline"}

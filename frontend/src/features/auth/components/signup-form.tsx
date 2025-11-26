@@ -3,7 +3,7 @@ import { MessageSquare, User, Mail, Lock, EyeOff, Eye } from "lucide-react";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { z } from "zod";
-import AuthImagePattern from "../../../components/reusable-components/auth-image-pattern";
+import authSvg from "../assets/auth.svg";
 import { Link } from "react-router";
 import { Button } from "../../../components/ui/button";
 import { useAuth } from "../../../contexts/auth-contexts";
@@ -79,7 +79,7 @@ function SignUpForm() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Full Name */}
-            <div>
+            <div className="space-y-2">
               <Label>
                 <span className="label-text font-medium">Full Name</span>
               </Label>
@@ -103,7 +103,7 @@ function SignUpForm() {
             </div>
 
             {/* Email */}
-            <div>
+            <div className="space-y-2">
               <Label>
                 <span className="label-text font-medium">Email</span>
               </Label>
@@ -127,7 +127,7 @@ function SignUpForm() {
             </div>
 
             {/* Password */}
-            <div>
+            <div className="space-y-2">
               <Label>
                 <span className="label-text font-medium">Password</span>
               </Label>
@@ -158,7 +158,10 @@ function SignUpForm() {
             </div>
 
             {/* Submit Button */}
-            <Button type="submit" className="btn btn-primary w-full">
+            <Button
+              type="submit"
+              className="bg-primary-green hover:bg-primary-green/80 cursor-pointer w-full"
+            >
               {isLoading ? "Processing..." : "Sign Up"}
             </Button>
           </form>
@@ -172,10 +175,19 @@ function SignUpForm() {
           </div>
         </div>
       </div>
-      <AuthImagePattern
-        title="Join Our Commuinity"
-        subtitle="Connect with friends,share moments, and stay in touch with loved ones"
-      />
+      <div className="bg-muted hidden items-center justify-center p-8 lg:flex lg:w-full">
+        <div className="text-foreground/80 max-w-2xl text-center">
+          <img
+            src={authSvg}
+            alt=""
+            className="mx-auto mb-6 transition duration-700 hover:scale-105"
+          />
+          <h2 className="text-4xl font-semibold">Welcome Back</h2>
+          <p className="text-foreground/60 mt-4">
+            Reconnect with your community and continue your journey
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
