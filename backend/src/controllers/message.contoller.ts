@@ -85,7 +85,7 @@ export const sendMessage = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteConversation = async (req: Request, res: Response) => {
+export const deleteConversation = async (req: any, res: Response) => {
   try {
     const userId = req.user?._id;
     const { id: otherUserId } = req.params;
@@ -94,6 +94,7 @@ export const deleteConversation = async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    // Adding current user to deletedFor for all messages
     await Message.updateMany(
       {
         $or: [
@@ -106,7 +107,57 @@ export const deleteConversation = async (req: Request, res: Response) => {
       }
     );
 
-    res.status(200).json({ message: "Conversation deleted for you" });
+    // Fetch updated messages to check deletion status
+    const updatedConversationMessages = await Message.find({
+      $or: [
+        { senderId: userId, receiverId: otherUserId },
+        { senderId: otherUserId, receiverId: userId },
+      ],
+    });
+
+    const userIdStr = userId.toString();
+    const otherUserIdStr = otherUserId.toString();
+
+    // Checking if messages are deleted by both users
+    const allDeletedByBoth = updatedConversationMessages.every((msg) => {
+      const deletedForArray = msg.deletedFor.map((id) => id.toString());
+      return (
+        deletedForArray.includes(userIdStr) &&
+        deletedForArray.includes(otherUserIdStr)
+      );
+    });
+
+    if (allDeletedByBoth) {
+      //  Delete all messages from database
+      await Message.deleteMany({
+        $or: [
+          { senderId: userId, receiverId: otherUserId },
+          { senderId: otherUserId, receiverId: userId },
+        ],
+      });
+
+      // Notify both users
+      const otherUserSocketId = getReceiverSocketId(otherUserId);
+      if (otherUserSocketId) {
+        io.to(otherUserSocketId).emit("conversationHardDeleted", { userId });
+      }
+
+      res.status(200).json({
+        message: "Conversation permanently deleted",
+        deleted: true,
+      });
+    } else {
+      // Soft delete
+      const otherUserSocketId = getReceiverSocketId(otherUserId);
+      if (otherUserSocketId) {
+        io.to(otherUserSocketId).emit("conversationDeleted", { userId });
+      }
+
+      res.status(200).json({
+        message: "Conversation deleted for you",
+        deleted: false,
+      });
+    }
   } catch (error) {
     console.log("Error in deleteConversation", error);
     res.status(500).json({ error: "Internal server Error" });
