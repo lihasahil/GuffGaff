@@ -1,15 +1,39 @@
-import { X } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../../components/ui/dialog";
 import { useAuth } from "../../../contexts/auth-contexts";
 import { useChat } from "../../../contexts/chat-contexts";
+import { useState } from "react";
 
 function ChatHeader() {
-  const { selectedUser, setSelectedUser } = useChat();
+  const { selectedUser, setSelectedUser, deleteConversation } = useChat();
   const { onlineUsers } = useAuth();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   if (!selectedUser) return null;
 
   const isOnline = onlineUsers.includes(selectedUser._id);
+
+  const handleDeleteConversation = async () => {
+    try {
+      setIsDeleting(true);
+      await deleteConversation(selectedUser._id);
+      setIsDialogOpen(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error("Failed to delete conversation", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="p-2.5 border-b border-base-300">
@@ -41,15 +65,60 @@ function ChatHeader() {
           </div>
         </div>
 
-        {/* Close Button */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setSelectedUser(null)}
-        >
-          <X className="size-5" />
-        </Button>
+        {/* Right side: action buttons */}
+        <div className="flex items-center gap-2">
+          {/* Delete Conversation Button */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsDialogOpen(true)}
+            disabled={isDeleting}
+            title="Clear conversation"
+            className="hover:bg-red-50 hover:text-red-600"
+          >
+            <Trash2 className="size-5" />
+          </Button>
+
+          {/* Close Button */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSelectedUser(null)}
+          >
+            <X className="size-5" />
+          </Button>
+        </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Conversation</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this conversation with{" "}
+              <span className="font-semibold">{selectedUser.fullName}</span>?
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConversation}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

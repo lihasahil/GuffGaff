@@ -22,6 +22,7 @@ interface ChatContextType {
     image?: string | null,
     voice?: string | null
   ) => Promise<void>;
+  deleteConversation: (userId: string) => Promise<void>;
   selectedUser: User | null;
   setSelectedUser: React.Dispatch<React.SetStateAction<User | null>>;
   isLoading: boolean;
@@ -117,6 +118,19 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, [socket, selectedUser]);
 
+   const deleteConversation = useCallback(
+    async (userId: string) => {
+      try {
+        await apiClient.delete(`/messages/conversation/${userId}`);
+        setMessages([]);
+        socket?.emit("conversationDeleted", { userId });
+      } catch (err) {
+        console.error("Failed to delete conversation", err);
+      }
+    },
+    [socket]
+  );
+
   // Initial fetch
   useEffect(() => {
     fetchUsers();
@@ -130,6 +144,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         fetchUsers,
         fetchMessages,
         sendMessage,
+        deleteConversation,
         selectedUser,
         setSelectedUser,
         isLoading,
