@@ -8,7 +8,7 @@
     "skipLibCheck": true,
     "strict": true,
     "resolveJsonModule": true,
-    "outDir": "build",
+    "outDir": "dist",
     "sourceMap": false
   },
   "exclude": ["node_modules", "build", "dist", "public"]
