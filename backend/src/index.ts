@@ -18,7 +18,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "https://guff-gaff-frontend-five.vercel.app",
+    origin: "https://guffgaff-frontend-gsd0.onrender.com",
     credentials: true,
   })
 );
