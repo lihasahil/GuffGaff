@@ -62,24 +62,33 @@ const createApiInstance = ({
     interceptors?.onResponse ?? ((response: AxiosResponse) => response),
     interceptors?.onResponseError ??
       (async (error: AxiosError) => {
-        const currentPath = window.location.pathname; // where user currently is
+        const currentPath = window.location.pathname;
+        const requestUrl = error.config?.url || "";
 
         console.error("[API Response Error]:", error);
 
         if (error.response?.status === 401) {
+          // CRITICAL FIX: Don't intercept /auth/check or /auth/logout
+          // Let the AuthContext handle these naturally
+          if (
+            requestUrl.includes("/auth/check") ||
+            requestUrl.includes("/auth/logout")
+          ) {
+            return Promise.reject(error);
+          }
+
           // Check if current path is NOT inside AUTH routes
           const authRoutes = Object.values(ROUTES.AUTH);
-          const isAuthRoute = authRoutes.some((route) => {
-            return route === currentPath;
-          });
+          const isAuthRoute = authRoutes.some((route) => route === currentPath);
 
           if (!isAuthRoute) {
             console.warn("Unauthorized outside auth route! Logging out...");
-            try {
-              await apiClient.post("/auth/logout");
-            } catch (logoutErr) {
+
+            // Fire and forget - don't await to avoid potential loops
+            apiClient.post("/auth/logout").catch((logoutErr) => {
               console.error("Logout request failed:", logoutErr);
-            }
+            });
+
             localStorage.removeItem("access_token");
             localStorage.removeItem("user");
             window.location.href = ROUTES.AUTH.SIGNIN;
