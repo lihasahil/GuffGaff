@@ -120,7 +120,7 @@ const ChatContainer = () => {
                           />
                         )}
 
-                        {/* 🎙️ Voice message bubble */}
+                        {/* Voice message bubble */}
                         {msg.voice && (
                           <div
                             className={`mt-2 flex items-center gap-3 px-3 py-2 rounded-lg ${
