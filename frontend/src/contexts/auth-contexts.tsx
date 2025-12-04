@@ -20,7 +20,7 @@ type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  onlineUsers: string[]; // 👈 NEW
+  onlineUsers: string[];
   login: (email: string, password: string) => Promise<void>;
   signup: (fullName: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -29,7 +29,7 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const SOCKET_URL = "http://localhost:5001";
+const SOCKET_URL = import.meta.env.VITE_BASE_URL;
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
