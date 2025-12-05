@@ -14,7 +14,8 @@ import { apiClient } from "../lib/api-client";
 import type { User } from "../types/auth-types";
 import { ROUTES } from "../configs/routes";
 import { useNavigate } from "react-router";
-import { io, type Socket } from "socket.io-client";
+import { type Socket } from "socket.io-client";
+import { createSocket } from "../lib/socket";
 
 type AuthContextType = {
   user: User | null;
@@ -24,12 +25,11 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<void>;
   signup: (fullName: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (data: Partial<User>) => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<User>;
   socket: Socket | null;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const SOCKET_URL = import.meta.env.VITE_BASE_URL;
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -45,13 +45,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         withCredentials: true,
       });
       setUser(response.data);
-    } catch {
+    } catch (err) {
+      console.error("Failed to fetch user:", err);
       setUser(null);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
+  // Initial user fetch on mount
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
@@ -59,45 +61,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Manage socket connection based on user auth state
   useEffect(() => {
     if (user && !socketRef.current) {
-      const socket = io(SOCKET_URL, {
-        withCredentials: true,
-        autoConnect: false,
-        auth: { userId: user._id },
-      });
+      console.log("🔌 Creating socket for user:", user._id);
 
-      socket.connect();
+      const socket = createSocket();
 
+      // IMPORTANT: Set auth BEFORE connecting
+      socket.auth = { userId: user._id };
+
+      // Connection event handlers
       socket.on("connect", () => {
-        console.log("🔌 Socket connected:", socket.id);
+        console.log("✅ Socket connected successfully:", socket.id);
       });
 
-      socket.on("disconnect", () => {
-        console.log("Socket disconnected");
+      socket.on("disconnect", (reason) => {
+        console.log("❌ Socket disconnected:", reason);
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      socket.on("connect_error", (error: any) => {
+        console.error("❌ Socket connection error:", error);
       });
 
       socket.on("getOnlineUsers", (users: string[]) => {
-        console.log(" Online users:", users);
+        console.log("👥 Online users count:", users.length);
         setOnlineUsers(users);
       });
 
+      // NOW connect after setting auth
+      socket.connect();
       socketRef.current = socket;
     }
 
     // Disconnect when user logs out
     if (!user && socketRef.current) {
+      console.log("🔌 Disconnecting socket");
       socketRef.current.disconnect();
       socketRef.current = null;
       setOnlineUsers([]);
     }
-
-    // Cleanup
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.off("connect");
-        socketRef.current.off("disconnect");
-        socketRef.current.off("getOnlineUsers");
-      }
-    };
   }, [user]);
 
   // Signup
@@ -123,7 +124,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [fetchUser]
   );
 
-  // Login → fetch user (socket connects via effect)
+  // Login
   const login = useCallback(
     async (email: string, password: string) => {
       try {
@@ -146,7 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [fetchUser]
   );
 
-  // Logout - disconnect socket automatically via effect
+  // Logout
   const logout = useCallback(async () => {
     try {
       await apiClient.post("/auth/logout", {}, { withCredentials: true });
@@ -160,13 +161,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [navigate]);
 
-  const updateProfile = async (data: Partial<User>) => {
+  // Update Profile
+  const updateProfile = useCallback(async (data: Partial<User>) => {
     setIsLoading(true);
     try {
       const res = await apiClient.put<User>("/auth/update-profile", data, {
         withCredentials: true,
       });
       setUser(res.data);
+      return res.data;
     } catch (error) {
       if (error instanceof AxiosError) {
         console.error(
@@ -178,7 +181,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -192,7 +195,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       updateProfile,
       socket: socketRef.current,
     }),
-    [user, isLoading, onlineUsers, signup, login, logout]
+    [user, isLoading, onlineUsers, login, logout, signup, updateProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
