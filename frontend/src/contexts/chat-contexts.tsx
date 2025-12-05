@@ -33,7 +33,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { socket, user } = useAuth();
+  const { socket } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -46,7 +46,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       const res = await apiClient.get<User[]>("/messages/users");
       setUsers(res.data);
     } catch (err) {
-      console.error("Failed to fetch users:", err);
+      console.error("Failed to fetch users", err);
     } finally {
       setIsLoading(false);
     }
@@ -59,7 +59,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       const res = await apiClient.get<Message[]>(`/messages/${userId}`);
       setMessages(res.data);
     } catch (err) {
-      console.error("Failed to fetch messages:", err);
+      console.error("Failed to fetch messages", err);
     } finally {
       setIsLoading(false);
     }
@@ -79,85 +79,35 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         if (image) payload.image = image;
         if (voice) payload.voice = voice;
 
-        console.log("📤 Sending message to:", userId);
         const res = await apiClient.post<Message>(
           `/messages/send/${userId}`,
           payload
         );
 
-        console.log("✅ Message sent:", res.data);
-
-        // Update local state immediately
+        // Update local state
         setMessages((prev) => [...prev, res.data]);
 
-        // Emit via socket
-        if (socket?.connected) {
-          console.log("📡 Emitting via socket");
-          socket.emit("sendMessage", res.data);
-        } else {
-          console.warn("⚠️ Socket not connected");
-        }
+        // Emit real-time event via socket from AuthContext
+        socket?.emit("sendMessage", res.data);
       } catch (err) {
-        console.error("Failed to send message:", err);
+        console.error("Failed to send message", err);
       }
     },
     [socket]
   );
 
-  // Delete conversation
-  const deleteConversation = useCallback(
-    async (userId: string) => {
-      try {
-        await apiClient.delete(`/messages/conversation/${userId}`);
-        setMessages([]);
-        if (socket?.connected) {
-          socket.emit("conversationDeleted", { userId });
-        }
-      } catch (err) {
-        console.error("Failed to delete conversation:", err);
-      }
-    },
-    [socket]
-  );
-
-  // Listen for real-time incoming messages
+  //  Listen for real-time incoming messages
   useEffect(() => {
-    if (!socket) {
-      console.warn("⚠️ Socket not available");
-      return;
-    }
-
-    if (!socket.connected) {
-      console.warn("⚠️ Socket not connected");
-      return;
-    }
-
-    if (!selectedUser) {
-      console.warn("⚠️ No user selected");
-      return;
-    }
-
-    console.log(
-      "📡 Listening for messages from:",
-      selectedUser._id,
-      "Current user:",
-      user?._id
-    );
+    if (!socket) return;
 
     const handleReceiveMessage = (message: Message) => {
-      console.log("📨 New message received:", message);
-
-      // Check if message is relevant to current chat
-      const isRelevant =
-        (message.senderId === selectedUser._id &&
-          message.receiverId === user?._id) ||
-        (message.senderId === user?._id &&
-          message.receiverId === selectedUser._id);
-
-      if (isRelevant) {
+      // Only append messages relevant to the current chat
+      if (
+        selectedUser &&
+        (message.senderId === selectedUser._id ||
+          message.receiverId === selectedUser._id)
+      ) {
         setMessages((prev) => [...prev, message]);
-      } else {
-        console.log("⚠️ Message not relevant to current chat, ignoring...");
       }
     };
 
@@ -166,7 +116,20 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => {
       socket.off("newMessage", handleReceiveMessage);
     };
-  }, [socket, selectedUser, user]);
+  }, [socket, selectedUser]);
+
+   const deleteConversation = useCallback(
+    async (userId: string) => {
+      try {
+        await apiClient.delete(`/messages/conversation/${userId}`);
+        setMessages([]);
+        socket?.emit("conversationDeleted", { userId });
+      } catch (err) {
+        console.error("Failed to delete conversation", err);
+      }
+    },
+    [socket]
+  );
 
   // Initial fetch
   useEffect(() => {
