@@ -10,6 +10,8 @@ import type { User } from "../types/auth-types";
 import type { Message } from "../types/message-types";
 import { apiClient } from "../lib/api-client";
 import { useAuth } from "./auth-contexts";
+import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 interface ChatContextType {
   users: User[];
@@ -118,14 +120,20 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, [socket, selectedUser]);
 
-   const deleteConversation = useCallback(
+  const deleteConversation = useCallback(
     async (userId: string) => {
       try {
         await apiClient.delete(`/messages/conversation/${userId}`);
         setMessages([]);
         socket?.emit("conversationDeleted", { userId });
       } catch (err) {
-        console.error("Failed to delete conversation", err);
+        const message =
+          err instanceof AxiosError
+            ? (err.response?.data as string) || err.message
+            : err instanceof Error
+            ? err.message
+            : String(err);
+        toast.error(`Failed to delete conversation: ${message}`);
       }
     },
     [socket]

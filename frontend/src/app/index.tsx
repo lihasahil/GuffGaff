@@ -1,13 +1,14 @@
 import { Outlet } from "react-router";
 import { AuthProvider } from "../contexts/auth-contexts";
-import { Toaster } from "react-hot-toast";
+
 import { ChatProvider } from "../contexts/chat-contexts";
+import { Toaster } from "sonner";
 function App() {
   return (
     <div>
       <AuthProvider>
         <ChatProvider>
-          <Toaster />
+          <Toaster position="top-right" richColors />
           <Outlet />
         </ChatProvider>
       </AuthProvider>

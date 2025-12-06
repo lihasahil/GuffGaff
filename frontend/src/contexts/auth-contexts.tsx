@@ -15,6 +15,7 @@ import type { User } from "../types/auth-types";
 import { ROUTES } from "../configs/routes";
 import { useNavigate } from "react-router";
 import { io, type Socket } from "socket.io-client";
+import { toast } from "sonner";
 
 type AuthContextType = {
   user: User | null;
@@ -110,10 +111,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           { fullName, email, password },
           { withCredentials: true }
         );
+        toast.success("Account created successfully!");
         await fetchUser();
       } catch (err) {
         if (err instanceof AxiosError) {
-          console.error("Signup failed:", err.response?.data || err.message);
+          toast.error("Signup failed:", err.response?.data || err.message);
         }
         throw err;
       } finally {
@@ -133,10 +135,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           { email, password },
           { withCredentials: true }
         );
+        toast.success("Logged in successfully!");
         await fetchUser();
       } catch (err) {
         if (err instanceof AxiosError) {
-          console.error("Login failed:", err.response?.data || err.message);
+          toast.error("Login failed:", err.response?.data || err.message);
         }
         throw err;
       } finally {
@@ -152,7 +155,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await apiClient.post("/auth/logout", {}, { withCredentials: true });
     } catch (err) {
       if (err instanceof AxiosError) {
-        console.warn("Logout failed:", err.response?.data || err.message);
+        toast.error("Logout failed:", err.response?.data || err.message);
       }
     } finally {
       setUser(null);
@@ -167,9 +170,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         withCredentials: true,
       });
       setUser(res.data);
+      toast.success("Profile Updated successfully!");
     } catch (error) {
       if (error instanceof AxiosError) {
-        console.error(
+        toast.error(
           "Update profile failed:",
           error.response?.data || error.message
         );
