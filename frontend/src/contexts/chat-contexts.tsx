@@ -126,6 +126,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         await apiClient.delete(`/messages/conversation/${userId}`);
         setMessages([]);
         socket?.emit("conversationDeleted", { userId });
+        toast.success("Conversation cleared successfully!");
       } catch (err) {
         const message =
           err instanceof AxiosError

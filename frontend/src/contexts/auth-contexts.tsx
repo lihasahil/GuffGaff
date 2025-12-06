@@ -153,6 +153,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = useCallback(async () => {
     try {
       await apiClient.post("/auth/logout", {}, { withCredentials: true });
+      toast.success("Logged out successfully!");
     } catch (err) {
       if (err instanceof AxiosError) {
         toast.error("Logout failed:", err.response?.data || err.message);
